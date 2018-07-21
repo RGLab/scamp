@@ -13,4 +13,4 @@ The most recent version can be installed from [github](https://github.com/RGlab/
     
 ## Citation
 
-Please cite [Selective Clustering Annotated using Modes of Projections](https://arxiv.org)
+If you find `scamp` useful in your work, please consider citing [Selective Clustering Annotated using Modes of Projections](https://arxiv.org)
