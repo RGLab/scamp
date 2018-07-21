@@ -1,0 +1,5 @@
+useDynLib(scamp)
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
+export(scamp)
+
