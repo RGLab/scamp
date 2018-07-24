@@ -344,6 +344,7 @@ scamp <- function(dataSet,
                                  getDebugInfo,
                                  gaussianScaleParameter,
                                  randomSeed)
+    scampLabels <- lapply(scampLabels,function(cv){as.character(sapply(cv,function(x){gsub("_$","",x)}))})
     return(scampLabels)
 }
 
