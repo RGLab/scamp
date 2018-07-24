@@ -1,0 +1,276 @@
+---
+title: "Intro to SCAMP R package"
+author: 
+- Evan Greene
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 12,
+  dpi = 100,
+  fig.align = "center"
+)
+```
+
+# SCAMP Overview
+
+[Selective Clustering Annotated using Modes of Projections](https://arxiv.org) (SCAMP) 
+is a new clustering algorithm for data in $\mathbb{R}^p$.
+
+This vigette provides an overview of how to use the implementation provided in the **scamp** package.
+
+## Using the **<span style="color:skyblue">scamp</span>** function in **R**
+
+After installing and loading the **scamp** library, the **R** function 
+**<span style="color:skyblue">scamp</span>** is available to cluster
+numeric **R** matrices.
+
+```{r load-data, warning=FALSE, eval=FALSE}
+library(scamp)
+?scamp
+```
+
+The documentation provides details about many **<span style="color:skyblue">scamp</span>** parameters. 
+The majority of the time, most available parameters do not need to be adjusted.
+The goal of this vignette is to demonstrate how to alter the subset of parameters 
+that are frequently modified, to help cluster your particular data matrix.
+
+We will use the **iris** data set as a running example. 
+
+### Use 1: single SCAMP iteration.
+
+The **<span style="color:skyblue">scamp</span>** function checks to make sure that it has been passed a matrix from R.
+
+```{r first-example, warining=FALSE, eval=FALSE}
+library(scamp)
+clusterMatrix <- as.matrix(iris[,-5])
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=1,
+                        randomSeed=1234)
+proc.time() - startTime
+table(scampClustering$RunOffVote)
+table(scampClustering$MaxVote)
+```
+```{r first-example-RUN, warining=FALSE, eval=TRUE,echo=FALSE,message=FALSE}
+library(scamp)
+clusterMatrix <- as.matrix(iris[,-5])
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=1,
+                        randomSeed=1234)
+proc.time() - startTime
+table(scampClustering$RunOffVote)
+table(scampClustering$MaxVote)
+```
+
+The parameter <span style="color:red">dataSet</span>  passes **<span style="color:skyblue">scamp</span>** the matrix you wish to cluster. 
+
+The parameter <span style="color:red">numberIterations</span> controls how many intermediate clusterings are determined before a final clustering is found. 
+The final clustering is determined by analyzing the voting history constituded by the individual 
+**<span style="color:skyblue">scamp</span>** clustering.
+
+**<span style="color:skyblue">scamp</span>** returns an **R** list of two character vectors, with each entry the observation's cluster label.
+The "MaxVote" heuristic labels an observation (and so clusters a data matrix) with its most frequent label. 
+The "RunOffVote" heuristic attempts to combine labels when no single label recieves a majority vote.
+In the case of a single iteration, the voting heuristics agree.
+
+The parameter <span style="color:red">randomSeed</span>  is used to set the random seed in C++. It is used for reproducibility
+when the search for candidate clusters is randomized.
+
+### Use 2: single SCAMP iteration, parallel.
+
+The **<span style="color:skyblue">scamp</span>** function supports multiple threads as several key stages. 
+In particular, the search for candidate clusters is split across threads.
+
+The parameter <span style="color:red">numberOfThreads</span> controls the number of threads the 
+**<span style="color:skyblue">scamp</span>** function is allowed to use. By default, 
+the parameter <span style="color:red">numberOfThreads</span> is set to $1$.
+
+You can manually set this to an arbitrary integer value, but this can cause performance problems if you set it too large.
+For parallel execution, setting the <span style="color:red">numberOfThreads</span> to $0$ will cause 
+**<span style="color:skyblue">scamp</span>** to automatically use $1$ thread per available core.
+
+```{r second-example, warining=FALSE, eval=FALSE}
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=1,
+                        randomSeed=1234,
+                        numberOfThreads=0)
+proc.time() - startTime
+table(iris[,"Species"],scampClustering$MaxVote)
+```
+```{r second-example-RUN, warining=FALSE, eval=TRUE,echo=FALSE,message=FALSE}
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=1,
+                        randomSeed=1234,
+                        numberOfThreads=0)
+proc.time() - startTime
+table(iris[,"Species"],scampClustering$MaxVote)
+```
+
+### Use 3: single SCAMP iteration, parallel, specify number of candidate clusters.
+
+By default, **<span style="color:skyblue">scamp</span>** randomly searches for $50 \cdot \text{ncol(dataSet)}$ candidate clusters each
+iteration. In the case of the **iris** data, this means scamp finds at least $200$ candidate clusters each iteration. This number
+can be slightly exceeded each iteraation, depending on how many threads are launched.
+
+In a random search iteration, the parameter <span style="color:red">maximumClusterNum</span> controls how many candidate clusters are found.
+By decreasing this value, **<span style="color:skyblue">scamp</span>** will run faster, but potentially produce noisier clusterings.
+
+```{r third-example, warining=FALSE, eval=FALSE}
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=1,
+                        randomSeed=1234,
+                        numberOfThreads=0,
+                        maximumClusterNum=20)
+proc.time() - startTime
+table(iris[,"Species"],scampClustering$MaxVote)
+```
+```{r third-example-RUN, warining=FALSE, eval=TRUE,echo=FALSE,message=FALSE}
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=1,
+                        randomSeed=1234,
+                        numberOfThreads=0,
+                        maximumClusterNum=20)
+proc.time() - startTime
+table(iris[,"Species"],scampClustering$MaxVote)
+```
+
+
+### Use 4: multiple SCAMP iterations, parallel, specify number of candidate clusters.
+
+By increasing the parameter <span style="color:red">numberIterations</span>,
+the "MaxVote" and "RunOffVote" heuristic may diverge. By comparing observation labels, we can
+identify 
+
+```{r fourth-example, warining=FALSE, eval=FALSE}
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=100,
+                        randomSeed=1234,
+                        numberOfThreads=0,
+                        maximumClusterNum=20)
+proc.time() - startTime
+table(scampClustering$RunOffVote,scampClustering$MaxVote)
+uncertainVote <- scampClustering$MaxVote
+uncertainVote[which(scampClustering$MaxVote != scampClustering$RunOffVote)] <- "Uncertain"
+table(iris[,"Species"],uncertainVote)
+```
+```{r, echo=FALSE, eval=FALSE}
+plotDF <- data.frame(petalLength=iris[,"Petal.Length"],
+                     petalWidth=iris[,"Petal.Width"],
+                     species=as.factor(iris[,"Species"]),
+                     scampLabel=as.factor(uncertainVote))
+library(ggplot2)
+ggplot(plotDF,aes(x=petalLegth,y=petalWidth,shape=species,color=scampLabel)) + geom_point() + theme_bw()
+```
+```{r fourth-example-run, warining=FALSE, eval=TRUE,echo=FALSE,message=FALSE}
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=100,
+                        randomSeed=1234,
+                        numberOfThreads=0,
+                        maximumClusterNum=20)
+proc.time() - startTime
+table(scampClustering$RunOffVote,scampClustering$MaxVote)
+uncertainVote <- scampClustering$MaxVote
+uncertainVote[which(scampClustering$MaxVote != scampClustering$RunOffVote)] <- "Uncertain"
+table(iris[,"Species"],uncertainVote)
+```
+```{r, echo=FALSE, eval=FALSE}
+plotDF <- data.frame(petalLength=iris[,"Petal.Length"],
+                     petalWidth=iris[,"Petal.Width"],
+                     species=as.factor(iris[,"Species"]),
+                     scampLabel=as.factor(uncertainVote))
+library(ggplot2)
+ggplot(plotDF,aes(x=petalLength,y=petalWidth,shape=species,color=scampLabel)) + geom_point() + theme_bw()
+```
+
+### Use 5: multiple SCAMP iterations, parallel, exhaustive search for candidate clusters.
+
+To instruct **<span style="color:skyblue">scamp</span>** to exhaustively search for candidate clusters, two 
+parameters must be adjusted.
+
+The parameter <span style="color:red">randomCandidateSearch</span> controls the **initial** search
+for candidate clusters. 
+
+The parameter <span style="color:red">randomResidualCandidateSearch</span> controls all **residual** searches
+for candidate clusters.
+
+To search exhaustively at level $\alpha = 0.25$, both must be set to FALSE. Note that we let the parameter
+<span style="color:red">maximumClusterNum</span> revert to its default setting. In the exhaustive search context,
+setting this to a small finite value will cause the search to stop before exhaustive search completes.
+
+```{r fifth-example, warining=FALSE, eval=FALSE}
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=100,
+                        randomSeed=1234,
+                        numberOfThreads=0,
+                        randomCandidateSearch=FALSE,
+                        randomResidualCandidateSearch=FALSE)
+proc.time() - startTime
+table(iris[,"Species"],scampClustering$MaxVote)
+```
+```{r fifth-example-run, warining=FALSE, eval=TRUE,echo=FALSE,message=FALSE}
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=100,
+                        randomSeed=1234,
+                        numberOfThreads=0,
+                        randomCandidateSearch=FALSE,
+                        randomResidualCandidateSearch=FALSE)
+proc.time() - startTime
+table(iris[,"Species"],scampClustering$MaxVote)
+```
+
+### Important SCAMP parameters: $\alpha$, $m$, and $\gamma$
+
+The search for candidate clusters is guided by the dip test level $\alpha$.
+In **<span style="color:skyblue">scamp</span>**, $\alpha$ is set by the parameter <span style="color:red">pValueThreshold</span>.
+
+The lower bound on candidate cluster size $m$ is set by the parameter <span style="color:red">minimumClusterSize</span>.
+
+The noise scale parameter $\gamma$ is set by the parameter <span style="color:red">gaussianScaleParameter</span>.
+
+These can be modified individual or jointly from default settings.
+
+```{r final-example, warining=FALSE, eval=FALSE}
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=100,
+                        randomSeed=1234,
+                        numberOfThreads=0,
+                        randomCandidateSearch=FALSE,
+                        randomResidualCandidateSearch=FALSE,
+                        gaussianScaleParameter=2,
+                        pValueThreshold=0.35,
+                        minimumClusterSize = 10)
+proc.time() - startTime
+table(iris[,"Species"],scampClustering$MaxVote)
+```
+```{r final-example-run, warining=FALSE, eval=TRUE,echo=FALSE,message=FALSE}
+startTime <- proc.time()
+scampClustering <-scamp(dataSet=clusterMatrix,
+                        numberIterations=100,
+                        randomSeed=1234,
+                        numberOfThreads=0,
+                        randomCandidateSearch=FALSE,
+                        randomResidualCandidateSearch=FALSE,
+                        gaussianScaleParameter=2,
+                        pValueThreshold=0.35,
+                        minimumClusterSize = 10)
+proc.time() - startTime
+table(iris[,"Species"],scampClustering$MaxVote)
+```

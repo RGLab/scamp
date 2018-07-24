@@ -10,10 +10,18 @@ The most recent version can be installed from [github](https://github.com/RGlab/
 
     library(devtools)
     devtools::install_github("RGLab/scamp")
+
+To install with a vignette, instead run
+
+    library(devtools)
+    devtools::install_github("RGLab/scamp", build_vignettes=T)
+
+Then, after loading `scamp`, type `vignette('scampIntro')`.
     
 ## Citation
 
-If you find `scamp` useful in your work, please consider citing [Selective Clustering Annotated using Modes of Projections](https://arxiv.org)
+If you end up using `scamp` to cluster data in your work,
+please consider citing [Selective Clustering Annotated using Modes of Projections](https://arxiv.org).
 
 ## Reproducing results
 
