@@ -69,7 +69,7 @@
 #' @param numberOfThreads The addition of noise to the dataSet, the random search for candidate clusters,
 #'   and the annotation of selected clusters have been parallelized. For numberOfThreads greater than 2,
 #'   numberOfThreads-1 worker threads will add noise to the dataSet, conduct the search for candidate clusters,
-#'   and annotate the selected clusters. The default value of 0 indicates scamp should detect the maximum number
+#'   and annotate the selected clusters. The value of 0 indicates scamp should detect the maximum number
 #'   of threads supported by the hardware and then use that value.
 #' 
 #' @param getVotingHistory Boolean flag. If true, the complete voting history for 
@@ -138,8 +138,10 @@
 #' @examples
 #' clusterMatrix <- as.matrix(iris[,-5])
 #' scampClustering <- scamp(dataSet=clusterMatrix,
-#'                          numberIterations=1000,
-#'                          clusterOutputString="./scampTest")
+#'                          numberIterations=100,
+#'                          clusterOutputString="./scampTest",
+#'                          numberOfThreads=0) #0 automatically sets to
+#'                                                          #hardware max.
 #' table(scampClustering$RunOffVote)
 #' table(scampClustering$MaxVote)
 #' @export
