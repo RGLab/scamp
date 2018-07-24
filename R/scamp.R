@@ -264,17 +264,19 @@ scamp <- function(dataSet,
             stop("boundary values must be in increasing order.")
         }
     }
-    if (!dir.exists(file.path(clusterOutputString))) {
-        dir.create(file.path(clusterOutputString))
-    }
-    else {
-        print(paste0("Scamp results will be stored in ",file.path(clusterOutputString)))
-    }
-    if (!dir.exists(file.path(clusterOutputString,"scampResults"))) {
-        dir.create(file.path(clusterOutputString,"scampResults"))
-    }
-    else {
-        print(paste0("Writing all scamp output to ",file.path(clusterOutputString,"scampResults")))
+    if (getVotingHistory) {
+        if (!dir.exists(file.path(clusterOutputString))) {
+            dir.create(file.path(clusterOutputString))
+        }
+        else {
+            print(paste0("Scamp results will be stored in ",file.path(clusterOutputString)))
+        }
+        if (!dir.exists(file.path(clusterOutputString,"scampResults"))) {
+            dir.create(file.path(clusterOutputString,"scampResults"))
+        }
+        else {
+            print(paste0("Writing all scamp output to ",file.path(clusterOutputString,"scampResults")))
+        }
     }
 
     aCols <- apply(dataSet,2,length)

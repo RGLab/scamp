@@ -378,7 +378,7 @@ Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix,
     iterString = std::to_string(elapsedIter);
 
     //write number of scamp iterations to file.
-    if (verboseOutput || ((elapsedIter % 10)==0)) { 
+    if (verboseOutput && ((elapsedIter % 10)==0)) { 
       ofile.open(iterFile);
       ofile << ("The clusterings are based off of " + iterString + " scamp iterations.") << std::endl;
       ofile.close();
@@ -474,7 +474,7 @@ Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix,
     mlabScampResult = assignLabelToScoreVector(maxScampResult,clusterAnnotations,finalLabels);
     
     //write the labeled scamp results to file
-    if (verboseOutput || ((elapsedIter % 50)==0)) { 
+    if (verboseOutput && ((elapsedIter % 50)==0)) { 
       for (auto i=0; i != numberOfDataObs; ++i) {
 	if (i == 0) {
 	  //once again, store the previous result.
