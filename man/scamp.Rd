@@ -156,7 +156,7 @@ annotated using modes of projections.
 \examples{
 clusterMatrix <- as.matrix(iris[,-5])
 scampClustering <- scamp(dataSet=clusterMatrix,
-                         numberIterations=1000,
+                         numberIterations=50,
                          clusterOutputString="./scampTest",
                          numberOfThreads=0) #0 automatically sets to
                                                          #hardware max.
