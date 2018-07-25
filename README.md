@@ -11,12 +11,16 @@ The most recent version can be installed from [github](https://github.com/RGlab/
     library(devtools)
     devtools::install_github("RGLab/scamp")
 
-To install with a vignette, instead run
+To install with vignettes, instead run
 
     library(devtools)
     devtools::install_github("RGLab/scamp", build_vignettes=T)
 
-Then, after loading `scamp`, type `vignette('scampIntro')`.
+This takes longer since the vignettes must be built from source.
+
+Two vignettes are available.
+After loading `scamp`, type `vignette('scampIntro')` to read a vignette discussing how to use the `scamp` function in R.
+Type `vignette('nDip')` to read a vignette discussing the N-dip facilities that are used in the search for candidate clusters.
     
 ## Citation
 
