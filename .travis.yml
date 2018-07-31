@@ -8,5 +8,5 @@ cache: packages
 os:
   - linux
   - osx
-script
+script:
   - Rscript -e 'library(devtools);devtools::install_github("RGLab/scamp");'
