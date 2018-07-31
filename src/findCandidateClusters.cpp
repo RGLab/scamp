@@ -8,7 +8,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <sys/resource.h>
+//#include <sys/resource.h>
 #include <random>
 
 void ccSearchThread(const std::vector<std::vector<double>>& dmRef,

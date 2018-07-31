@@ -23,7 +23,7 @@
 #include <Rcpp.h>
 #include <map>
 #include "scmp.h"
-#include <sys/resource.h>
+//#include <sys/resource.h>
 #include <fstream>
 #include <cstdio> //for std::rename
 #include <thread>

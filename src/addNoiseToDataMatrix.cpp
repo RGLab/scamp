@@ -21,7 +21,7 @@
 #include <thread>
 #include <mutex>
 #include <Rcpp.h>
-#include <sys/resource.h>
+//#include <sys/resource.h>
 
 double cppRnorm(double mu, double std, std::mt19937& mtRef)
 {

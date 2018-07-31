@@ -22,7 +22,7 @@
 #include <numeric>
 #include <Rcpp.h>
 #include "scmp.h"
-#include <sys/resource.h>
+//#include <sys/resource.h>
 #include <unordered_map>
 
 #ifndef _VERBOSE_NOISY_SCAMP_COMPILATION_
