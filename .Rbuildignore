@@ -1,0 +1,4 @@
+^gpl3\.txt$
+^\./reproducibility$
+^\./reproducibility\/\*$
+^\.travis\.yml$

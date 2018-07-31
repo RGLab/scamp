@@ -9,11 +9,13 @@ scamp(dataSet, numberIterations = 100, clusterOutputString = c("."),
   maximumSearchDepth = 1e+06, maximumClusterNum = (50 * ncol(dataSet)),
   maximumAntimodeNumber = 100, maximumSearchTime = 1e+06,
   annotationVec = colnames(dataSet), finalAnnQs = c(0.499, 0.5, 0.501),
-  numberOfThreads = 1, getVotingHistory = FALSE, getDebugInfo = FALSE,
-  randomCandidateSearch = TRUE, randomResidualCandidateSearch = TRUE,
-  anyValueRestricted = FALSE, resValMatrix = matrix(0, nrow = 2, ncol = 2),
-  setAnnotationBoudaries = FALSE, annotationBoundaryValues = list(rep(0,
-  ncol(dataSet))), gaussianScaleParameter = 4, randomSeed = 0,
+  numberOfThreads = 1, getVotingHistory = FALSE,
+  getDebugInfo = FALSE, randomCandidateSearch = TRUE,
+  randomResidualCandidateSearch = TRUE, anyValueRestricted = FALSE,
+  resValMatrix = matrix(0, nrow = 2, ncol = 2),
+  setAnnotationBoudaries = FALSE,
+  annotationBoundaryValues = list(rep(0, ncol(dataSet))),
+  gaussianScaleParameter = 4, randomSeed = 0,
   allowRepeatedSplitting = FALSE)
 }
 \arguments{

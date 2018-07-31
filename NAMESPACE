@@ -1,5 +1,6 @@
 useDynLib(scamp)
 exportPattern("^[[:alpha:]]+")
-importFrom(Rcpp, evalCpp)
+importFrom("Rcpp", "evalCpp")
+importFrom("stats","quantile")
 export(scamp)
 
