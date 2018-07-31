@@ -2,11 +2,11 @@
 
 language: r
 r:
-  - oldrel
   - release
-  - devel
 sudo: false
 cache: packages
 os:
   - linux
   - osx
+script
+  - Rscript -e 'library(devtools);devtools::install_github("RGLab/scamp");'
