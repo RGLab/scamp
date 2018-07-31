@@ -5,8 +5,7 @@ r:
   - release
 sudo: false
 cache: packages
+compiler: clang
 os:
   - linux
   - osx
-script:
-  - Rscript -e 'library(devtools);devtools::install_github("RGLab/scamp");'
