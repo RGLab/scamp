@@ -1,3 +1,5 @@
+[![Travis-CI Build Status](https://travis-ci.org/RGLab/scamp.svg?branch=master)](https://travis-ci.org/RGLab/scamp)
+
 # scamp
 
 The `scamp` package implements the SCAMP algorithm described in [Selective Clustering Annotated using Modes of Projections](https://arxiv.org/abs/1807.10328).
@@ -21,7 +23,7 @@ This takes longer since the vignettes must be built from source.
 Two vignettes are available.
 After loading `scamp`, type `vignette('scampIntro')` to read a vignette discussing how to use the `scamp` function in R.
 Type `vignette('nDip')` to read a vignette discussing the N-dip facilities that are used in the search for candidate clusters.
-    
+
 ## Reproducing results
 
 Scripts to reproduce the main results of section 4 in [Selective Clustering Annotated using Modes of Projections](https://arxiv.org/abs/1807.10328)
