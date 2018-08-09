@@ -2,3 +2,4 @@
 ^\./reproducibility$
 ^\./reproducibility\/\*$
 ^\.travis\.yml$
+^appveyor\.yml$

@@ -2,19 +2,13 @@ Package: scamp
 Title: Selective Clustering Annotated using Modes of Projections
 Version: 0.0.1
 Authors@R: c(person("Evan", "Greene", email = "egreene@fredhutch.org", role = c("aut", "cre")),
-   	   person("Laurie", "Davies", role = c("aut")),	       
-	   person("J.R.M.", "Hosking", role=c("aut")),
-	   person("Arne", "Kovac", role = c("aut")),   
-	   person("Martin", "Maechler", role = c("aut")),
-	   person("Joe", "Song", role = c("aut")),
-	   person("Haizhou", "Wang", role = c("aut")))
-Author: Evan Greene [aut, cre],
-  Laurie Davies [aut],
-  J.R.M. Hosking  [aut],
-  Arne Kovac [aut],
-  Martin Maechler [aut],
-  Joe Song [aut],
-  Haizhou Wang [aut]
+   	   person("Laurie", "Davies", role = c("ctb")),	       
+	   person("J.R.M.", "Hosking", role=c("ctb")),
+	   person("Arne", "Kovac", role = c("ctb")),   
+	   person("Martin", "Maechler", role = c("ctb")),
+	   person("Joe", "Song", role = c("ctb")),
+	   person("Haizhou", "Wang", role = c("ctb")))
+Author: Evan Greene [aut, cre]
 Maintainer: Evan Greene <egreene@fredhutch.org>
 Description: This package implements selective clustering annotated using modes of projections (SCAMP).
     The scamp function can be used to cluster real-valued data matrices.
