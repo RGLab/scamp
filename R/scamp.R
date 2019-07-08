@@ -69,7 +69,7 @@
 #' @param numberOfThreads The addition of noise to the dataSet, the random search for candidate clusters,
 #'   and the annotation of selected clusters have been parallelized. For numberOfThreads greater than 2,
 #'   numberOfThreads-1 worker threads will add noise to the dataSet, conduct the search for candidate clusters,
-#'   and annotate the selected clusters. The value of 0 indicates scamp should detect the maximum number
+#'   and annotate the selected clusters. The default value of 0 indicates scamp should detect the maximum number
 #'   of threads supported by the hardware and then use that value.
 #' 
 #' @param getVotingHistory Boolean flag. If true, the complete voting history for 
@@ -107,10 +107,10 @@
 #'  If entry (i,j) is 2, it indicates observation i is \emph{restricted from above} along coordinate j: this observation will 
 #'  automatically be treated as "Highest" along coordinate j, and will not be used by the taut-string in the search for candidate clusters.
 #'
-#' @param setAnnotationBoudaries Boolean flag. If true, indicates the user has supplied a list of numeric vectors which  
+#' @param useAnnForest Boolean flag. If true, indicates the user has supplied a list of numeric vectors which serve as the annotation 
 #'  will serve as the annotation boundaries \emph{for each} column in the data set.
 #' 
-#' @param annotationBoundaryValues R list of numeric vectors. Each entry in the list corresponds to the columns in the data set. Each vector
+#' @param annForestVals R list of numeric vectors. Each entry in the list corresponds to the columns in the data set. Each vector
 #'  contains at least one value that will serve as the annotation boundary for that column.
 #'
 #' @param gaussianScaleParameter Noise is added in a two-step procedure for SCAMP. First, uniform noise is added to
@@ -131,6 +131,9 @@
 #' along the same column vector twice in a row: from the point of view of SCAMP, this can only arise due to technical
 #' error.
 #'
+#' @param annotationThresholdScore When a column vector's depth score exceeds this threshold,
+#' SCAMP will use that column vector to annotate a cluster.
+#'
 #' @return scamp returns an R list with two entries. Each entry is a vector of strings.
 #'  The first entry, named RunOffVote, is a clustering of the dataSet according to a run off vote across the scamp iterations.
 #'  The second entry, named MaxVote, is a clustering of the dataSet according to the maximum vote across the scamp iterations.
@@ -138,26 +141,24 @@
 #' @examples
 #' clusterMatrix <- as.matrix(iris[,-5])
 #' scampClustering <- scamp(dataSet=clusterMatrix,
-#'                          numberIterations=20,
-#'                          maximumClusterNum=20,
-#'                          numberOfThreads=0) #0 automatically sets to
-#'                                                          #hardware max.
+#'                          numberIterations=1000,
+#'                          clusterOutputString="./scampTest")
 #' table(scampClustering$RunOffVote)
 #' table(scampClustering$MaxVote)
 #' @export
 #' @md
 
 scamp <- function(dataSet,
-                  numberIterations = 100,
+                  numberIterations = 1,
                   clusterOutputString=c("."),
                   pValueThreshold = 0.25,
                   minimumClusterSize = 25,
                   maximumSearchDepth = 1e6,
-                  maximumClusterNum = (50 * ncol(dataSet)),
+                  maximumClusterNum = (50*ncol(dataSet)),
                   maximumAntimodeNumber = 100,
-                  maximumSearchTime=1e6,
+                  maximumSearchTime = 1e6,
                   annotationVec = colnames(dataSet),
-                  finalAnnQs=c(0.499,0.5,0.501),
+                  finalAnnQs=c(0.4999,0.5,0.5001),
                   numberOfThreads=1,
                   getVotingHistory=FALSE,
                   getDebugInfo=FALSE,
@@ -165,11 +166,12 @@ scamp <- function(dataSet,
                   randomResidualCandidateSearch=TRUE,
                   anyValueRestricted=FALSE,
                   resValMatrix = matrix(0,nrow=2,ncol=2),
-                  setAnnotationBoudaries=FALSE,
-                  annotationBoundaryValues=list(rep(0,ncol(dataSet))),
+                  useAnnForest=FALSE,
+                  annForestVals=list(rep(0,ncol(dataSet))),
                   gaussianScaleParameter=4,
                   randomSeed=0,
-                  allowRepeatedSplitting=FALSE){
+                  allowRepeatedSplitting=FALSE,
+                  annotationThresholdScore=0.75){
     if (!is.matrix(dataSet))
         stop("Must provide a numeric R matrix")
     if (!is.double(pValueThreshold))
@@ -200,10 +202,12 @@ scamp <- function(dataSet,
         stop("User must set randomResidualCandidateSearch either to TRUE or FALSE.")
     if (!(identical(anyValueRestricted,TRUE) || identical(anyValueRestricted,FALSE))) 
         stop("User must set anyValueRestricted either to TRUE or FALSE.")
-    if (!(identical(setAnnotationBoudaries,TRUE) || identical(setAnnotationBoudaries,FALSE))) 
-        stop("User must set setAnnotationBoudaries either to TRUE or FALSE.")
+    if (!(identical(useAnnForest,TRUE) || identical(useAnnForest,FALSE))) 
+        stop("User must set useAnnForest either to TRUE or FALSE.")
     if (!(identical(allowRepeatedSplitting,TRUE) || identical(allowRepeatedSplitting,FALSE))) 
         stop("User must set allowRepeatedSplitting either to TRUE or FALSE.")
+    if ((!is.numeric(annotationThresholdScore)) || (annotationThresholdScore <= 0))
+        stop("annotationThresholdScore must be a real number larger than 0.")
     if (anyValueRestricted) {
         if ((ncol(resValMatrix) != ncol(dataSet)) || (nrow(resValMatrix) != nrow(dataSet))) {
             stop("The restricted value matrix must be the same dimension as the input dataSet.")
@@ -250,18 +254,18 @@ scamp <- function(dataSet,
             stop("Must initialize the restricted value matrix according to these constraints for a meaningful clustering of the dataSet.")
         }
     }
-    if (setAnnotationBoudaries) {
-        if (length(annotationBoundaryValues) != ncol(dataSet)) {
-            stop("Must provide annotation boundaries values for every column in the dataSet.")
+    if (useAnnForest) {
+        if (length(annForestVals) != ncol(dataSet)) {
+            stop("Must provide forest values for every column in the dataSet.")
         }
-        if (!min(unlist(lapply(annotationBoundaryValues,function(x){min(sapply(x,is.numeric))})))) {
-            stop("Boundary values must be numeric values.")
+        if (!min(unlist(lapply(annForestVals,function(x){min(sapply(x,is.numeric))})))) {
+            stop("Forest values must be numeric values.")
         }
-        if (!min(unlist(lapply(annotationBoundaryValues,function(x){length(x)==length(unique(x))})))) {
-            stop("Boundary values must be unique numeric values.")
+        if (!min(unlist(lapply(annForestVals,function(x){length(x)==length(unique(x))})))) {
+            stop("Forest values must be unique numeric values.")
         }
-        if (!min(unlist(lapply(annotationBoundaryValues,function(x){min(sort(x)==x)})))) {
-            stop("boundary values must be in increasing order.")
+        if (!min(unlist(lapply(annForestVals,function(x){min(sort(x)==x)})))) {
+            stop("Forest values must be in increasing order.")
         }
     }
     if (getVotingHistory) {
@@ -278,7 +282,6 @@ scamp <- function(dataSet,
             print(paste0("Writing all scamp output to ",file.path(clusterOutputString,"scampResults")))
         }
     }
-
     aCols <- apply(dataSet,2,length)
     uCols <- apply(dataSet,2,function(x){length(unique(x))})
     rCols <- uCols/aCols
@@ -292,28 +295,32 @@ scamp <- function(dataSet,
     #scale the dataSet to ensure L-moment scores are comparable across columns.
     scaledDataSet <- scale(dataSet)
 
-    if (setAnnotationBoudaries) {
-        print("Annotation boundary values before scaling.")
+    if (useAnnForest) {
         scaledColNames <- colnames(scaledDataSet)
-        for (j in seq(length(annotationBoundaryValues))) {
-            print(paste0("Column ",scaledColNames[j]," values: "))
-            print(annotationBoundaryValues[[j]])
+        if (getDebugInfo) {
+            print("Annotation forest values before scaling.")
+            for (j in seq(length(annForestVals))) {
+                print(paste0("Column ",scaledColNames[j]," values: "))
+                print(annForestVals[[j]])
+            }
         }
         for (i in seq(ncol(dataSet))) {
             cData <- dataSet[,i]
-            vals <- annotationBoundaryValues[[i]]
-            newBoundaryVals <- c()
+            vals <- annForestVals[[i]]
+            newForestVals <- c()
             for (k in seq(length(vals))) {
                 val <- vals[k]
                 probVal <- length(which(cData <= val))/length(cData)
-                newBoundaryVals <- append(newBoundaryVals,as.numeric(quantile(scaledDataSet[,i],probs=probVal)))
+                newForestVals <- append(newForestVals,as.numeric(quantile(scaledDataSet[,i],probs=probVal)))
             }
-            annotationBoundaryValues[[i]] <- newBoundaryVals
+            annForestVals[[i]] <- newForestVals
         }
-        print("Annotation boundary values after scaling.")
-        for (j in seq(length(annotationBoundaryValues))) {
-            print(paste0("Column ",scaledColNames[j]," values: "))
-            print(annotationBoundaryValues[[j]])
+        if (getDebugInfo) {
+            print("Annotation forest values after scaling.")
+            for (j in seq(length(annForestVals))) {
+                print(paste0("Column ",scaledColNames[j]," values: "))
+                print(annForestVals[[j]])
+            }
         }
     }
 
@@ -335,16 +342,16 @@ scamp <- function(dataSet,
                                  numberOfThreads,
                                  anyValueRestricted,
                                  resValMatrix,
-                                 setAnnotationBoudaries,
-                                 annotationBoundaryValues,
+                                 useAnnForest,
+                                 annForestVals,
                                  numberIterations,
                                  clusterOutputString,
                                  getVotingHistory,
                                  maximumSearchTime,
                                  getDebugInfo,
                                  gaussianScaleParameter,
-                                 randomSeed)
-    scampLabels <- lapply(scampLabels,function(cv){as.character(sapply(cv,function(x){gsub("_$","",x)}))})
+                                 randomSeed,
+                                 annotationThresholdScore)
     return(scampLabels)
 }
 

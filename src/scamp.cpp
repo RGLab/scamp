@@ -22,7 +22,7 @@
 #include <numeric>
 #include <Rcpp.h>
 #include "scmp.h"
-//#include <sys/resource.h>
+#include <sys/resource.h>
 #include <unordered_map>
 
 #ifndef _VERBOSE_NOISY_SCAMP_COMPILATION_
@@ -48,11 +48,12 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
 				    unsigned long numThreadsToUse,
 				    bool useRestrictedValue,
 				    const std::vector<std::vector<int>>& restrictedVals,
-				    bool useFixedAnnotationBoundaries,
-				    Rcpp::List fixedAnnBdrys,
+				    bool useForestValues,
+				    Rcpp::List forestValues,
 				    const double& maxAllowedTime,
 				    double gaussianScaleParam,
-				    unsigned long long& randomSeed)
+				    unsigned long long& randomSeed,
+				    double depthScoreThreshold)
 {
   auto colNum = dataValsIn.size();
 
@@ -71,10 +72,22 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
     std::cout << "Starting search for candidate clusters." << std::endl;
   }
 
-  searchResults candClusters = findCandidateClusters(dataVals,restrictedVals,dipT,clusterLB,repeatsAllowed,
-						     maxSearchDepth,maxClusterNum,maxNumberOfGates,
-						     useRestrictedValue,randomSearch,maxAllowedTime,debugScamp,false,
-						     numThreadsToUse,randomSeed);
+  searchResults candClusters = findCandidateClusters(dataVals,
+						     restrictedVals,
+						     dipT,
+						     clusterLB,
+						     repeatsAllowed,
+						     maxSearchDepth,
+						     maxClusterNum,
+						     maxNumberOfGates,
+						     useRestrictedValue,
+						     randomSearch,
+						     maxAllowedTime,
+						     debugScamp,
+						     false,
+						     numThreadsToUse,
+						     randomSeed);
+
 
   if (_VERBOSE_NOISY_SCAMP_COMPILATION_ || debugScamp) {
     std::cout << "Task complete. Have completed search for candidate clusters." << std::endl;
@@ -166,6 +179,7 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
     //check for pathological selection path
     //abort and try again if detected
     currentSize = (sortedSubset[0]).size();
+    /*
     if ((lastSize - currentSize) < (2*clusterLB)) {
       if (debugScamp) {
 	std::cout << "Pathological selection: step-size. Abort clustering and re-noise." << std::endl;
@@ -174,6 +188,7 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
       std::vector<std::vector<int>> failContainer(1,failVec);
       return failContainer;
     }
+    */
     //update for next iteration
     lastSize=currentSize;
     
@@ -198,7 +213,6 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
 					    repeatsAllowed,maxSearchDepth,maxClusterNum,maxNumberOfGates,
 					    useRestrictedValue,randomSearch,maxAllowedTime,debugScamp,false,
 					    numThreadsToUse,randomSeed);
-
       if (residClusters.abortIteration) {
 	std::cout << "Residual search abort." << std::endl;
 	std::vector<int> failVec = {-1,-1};
@@ -249,8 +263,14 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
   }
 
   
-  //the data has been clustered. we now proceed to annotate numerical clusters with
+  //at this point, the data has been clustered. we now proceed to annotate numerical clusters with
   //labels that attempt to describe their key features. Since each candidate cluster obeys the definition
+  //of an alpha-m cluster at this point, we will label clusters by comparing their user-selected quantiles to the median
+  //gate location by channel in the dataset. 
+  
+  // note: the annotationGates store *ONLY* the phenotypically relevant gate data.
+  // the column min & max are **NOT** stored, contrary to the return value of tsGates and tsModeEstimate
+
   if (_VERBOSE_NOISY_SCAMP_COMPILATION_ || debugScamp) {
     std::cout << "Starting to annotate clusters." << std::endl;
   }
@@ -259,47 +279,123 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
   std::vector<std::vector<double>> annotationGates;
   annotationGates.resize(colNum);
   std::vector<bool> annCols;
-
-  if (useFixedAnnotationBoundaries) {
+  if ((useForestValues) || (randomSearch)) {
+    if (useForestValues) {
+      for (auto i = 0; i != colNum; ++i){
+	annCols.push_back(true);
+      }
+    }
+    else {
+      annCols = determineAnnotationColumns(dataVals,colNum,dipT,restrictedVals,useRestrictedValue);
+    }
     for (auto i = 0; i != colNum; ++i){
-      annCols.push_back(true);
-    }
-  }
-  else {
-    annCols = determineAnnotationColumns(dataVals,colNum,dipT,restrictedVals,useRestrictedValue);
-  }
-  for (auto i = 0; i != colNum; ++i){
-    //if we are using fixedAnnBdrys, use them instead of sample-specific boundaries.
-    if (useFixedAnnotationBoundaries) {
-      tmpBnd = Rcpp::as<std::vector<double>>(fixedAnnBdrys[i]);
-      if (_VERBOSE_NOISY_SCAMP_COMPILATION_ || debugScamp) {
-	std::cout << "Number of boundary values for column " << (i+1) << ": " << tmpBnd.size() << std::endl;
-      }
-      for (auto j = 0; j != tmpBnd.size(); ++j) {
-	if (_VERBOSE_NOISY_SCAMP_COMPILATION_ || debugScamp) {
-	  std::cout << "Boundary value: " << tmpBnd[j] << std::endl;
-	}
-	(annotationGates[i]).push_back(tmpBnd[j]);
-      }
-    }
-    else if (annCols[i] == true) {
-      tmpBnd = determineAnnotationBoundaries(gatePlacements,i,debugScamp);
-      if (tmpBnd.size()) {
+      //if we are using forestValues, use them instead of sample-specific boundaries.
+      if (useForestValues) {
+	tmpBnd = Rcpp::as<std::vector<double>>(forestValues[i]);
 	for (auto j = 0; j != tmpBnd.size(); ++j) {
 	  (annotationGates[i]).push_back(tmpBnd[j]);
 	}
       }
+      else if (annCols[i] == true) {
+	tmpBnd = determineAnnotationBoundaries(gatePlacements,i,debugScamp);
+	if (tmpBnd.size()) {
+	  for (auto j = 0; j != tmpBnd.size(); ++j) {
+	    (annotationGates[i]).push_back(tmpBnd[j]);
+	  }
+	}
+      }
     }
   }
-
   
+  else {
+    //the candidate cluster search was exhaustive.
+    columnSummary defaultSummary, currentSummary;
+    std::vector<columnSummary> dataSummary(colNum,defaultSummary);
+    int rootsInForest = 1; 
+    
+    //parse the gate placements for depth calculations.
+    gateInfo currentGateInfo;
+    int gateColumnNum;
+    int currentGateDepth;
+    unsigned long currentNumGates;
+    std::vector<double> gateLocs;
+    for (auto gatePlaceNum = 0; gatePlaceNum != gatePlacements.size(); ++gatePlaceNum) {
+      currentGateInfo = gatePlacements[gatePlaceNum];
+      gateColumnNum = currentGateInfo.colNumber;
+      gateLocs = currentGateInfo.gates;
+      currentNumGates = ((currentGateInfo.numGates)-2);
+      currentGateDepth = currentGateInfo.gateDepth;
+      if (currentNumGates > maxNumberOfGates) {
+	continue; //user supplies the upper bound to ignore.
+      }
+      else {
+	dataSummary[gateColumnNum].depthMap[currentNumGates].push_back(currentGateDepth);
+	for (int gateLocNum = 1; gateLocNum != (gateLocs.size()-1); ++gateLocNum) 
+	  ((dataSummary[gateColumnNum].gateMaps[currentNumGates])[gateLocNum]).push_back(gateLocs[gateLocNum]);
+      }
+    }
+
+    if (debugScamp) {
+      //check the parse.
+      std::unordered_map<int, std::vector<double>> tmpMap;
+      for (auto i = 0; i != dataSummary.size(); ++i) {
+	currentSummary = dataSummary[i];
+	std::cout << "Column " << (i+1) << " summary." << std::endl;
+	for (auto p : currentSummary.gateMaps) {
+	  //std::cout << p.first  << "-gates " << " contribution " << ((p.second)[0]).size() << std::endl;
+	  std::cout << p.first << ":-gates located at ";
+	  tmpMap = p.second;
+	  for (auto v : tmpMap){
+	    for (auto q : v.second){
+	      std::cout << q << " ";
+	    }
+	    std::cout << std::endl;
+	  }
+	}
+	std::cout << std::endl;
+	std::cout << "Gate depths." << std::endl;
+	for (auto p : currentSummary.depthMap) {
+	  std::cout << p.first << "-gates at depth: ";;
+	  for (auto v : p.second) {
+	    std::cout << v << " ";
+	  }
+	  std::cout << std::endl;
+	}
+	std::cout << std::endl;
+      }
+    }
+
+    //add exhaustive labeling
+    exhaustiveAnnotations exAnnVs= determineAnnotationsEx(dataVals,colNum,dipT,
+							  restrictedVals,useRestrictedValue,
+							  dataSummary,rootsInForest,
+							  depthScoreThreshold);
+
+    
+    //copy out cut points for annotation
+    annCols = exAnnVs.columnIsAnnotated;
+    for (auto gn = 0; gn != exAnnVs.cutPointLocations.size(); ++gn) {
+      if ((exAnnVs.cutPointLocations)[gn].size()) {
+	if (debugScamp) 
+	  std::cout << "Cut points for column " << (gn + 1) << " follow." << std::endl;
+	for (auto jn = 0; jn != (exAnnVs.cutPointLocations)[gn].size(); ++jn) {
+	  (annotationGates[gn]).push_back(((exAnnVs.cutPointLocations)[gn])[jn]);
+	  if (debugScamp) 
+	    std::cout << (((exAnnVs.cutPointLocations)[gn])[jn]) << " ";
+	}
+	if (debugScamp)
+	  std::cout << std::endl; 
+      }
+    }
+  }
 
   
   
   //finally, label the selectedClustering with annotations.
   std::vector<std::vector<int>> annotatedClustering;
   if (numThreadsToUse > 1) {
-    annotatedClustering = parallelAnnotateCluster(dataVals,
+    //try passing the raw data after clustering, so that the labels match the observed values
+    annotatedClustering = parallelAnnotateCluster(dataValsIn, //had passed dataVals 
 						  selectedClustering,
 						  annCols,
 						  annotationGates,
@@ -308,13 +404,22 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
 						  numThreadsToUse);
   }
   else {
-    annotatedClustering = annotateCluster(dataVals,
+    annotatedClustering = annotateCluster(dataValsIn, //had passed dataVals
 					  selectedClustering,
 					  annCols,
 					  annotationGates,
 					  clusterAnnotations,
 					  finalAnnotationQs);
   }
+  /*
+  std::vector<std::vector<int>> annotatedClustering;
+  annotatedClustering = annotateCluster(dataVals,
+					selectedClustering,
+					annCols,
+					annotationGates,
+					clusterAnnotations,
+					finalAnnotationQs);
+  */
   if (_VERBOSE_NOISY_SCAMP_COMPILATION_ || debugScamp) {
     std::cout << "Task complete. The clusters are labeled. Returning clustering." << std::endl;
   }

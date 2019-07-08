@@ -58,6 +58,7 @@ std::vector<bool> determineAnnotationColumns(const std::vector<std::vector<doubl
   }
   std::vector<bool> labelColumn(colNum,false);
   std::vector<double> curSortData, depthNum, depthDenom;
+  columnSummary curSum;
   for (int i = 0; i != colNum; ++i) {
     curSortData.clear();
     curSortData = sortedDataVals[i];

@@ -61,6 +61,35 @@ struct gateInfo {
   int gateDepth;
 };
 
+struct columnSummary {
+  //gateMaps key is number of cut points -- the cut-point-key.
+  //value is dictionary with integer keys between 0 and ((cut-point-key)-1).
+  //the vector<double> corresponding to values in nested map contain observed cut-point
+  //location in sort order, with position indicating tuples of cut-points.
+  //example of intended use: suppose the cut-point-key is 3. the nested map then contains
+  //|  0: 0.25, 0.35 <-- corresponds to the smallest observed cut-point value.
+  //|  1: 0.75, 0.68 <-- corresponds to the middle observed cut-points.
+  //|  2: 3.99, 4.12 <-- corresponds to the largest cut-points.
+  //this means that during the search for candidate clusters, this column was cut
+  //into four sub-collections with boundaries (0.25,0.75,3.99) in one search tree
+  //and (0.35,0.68,4.12) in another search tree.
+  std::unordered_map<int, std::unordered_map<int, std::vector<double>>> gateMaps; 
+  //depthMap key is ALSO number of cut points -- once again, the cut-point-key.
+  //value is a vector of ints corresponding to the depth at which the cut-point-key was observed.
+  //continuing with the preceding example, suppose the cut-point-key is 3. depthMaps then contains
+  //|  3:  4, 7  <-- indicates the column was split at (0.25,0.75,3.99) at depth 4 of one search tree,
+  //and split at values (0.35,0.68,4.12) at depth 7 in another search tree.
+  //in particular, the depth position in depthMap describes the cut-point depth in gateMaps,
+  //which is used to determine the columnScore -- the final parameter.
+  std::unordered_map<int, std::vector<int>> depthMap;
+  double columnScore;
+};
+
+struct exhaustiveAnnotations{
+  std::vector<bool> columnIsAnnotated;
+  std::vector<std::vector<double>> cutPointLocations;
+};
+
 struct searchResults {
   std::vector<std::vector<long>> candidates;
   std::vector<gateInfo> gateLocations;
@@ -116,6 +145,16 @@ std::vector<bool> determineAnnotationColumns(const std::vector<std::vector<doubl
 					     const std::vector<std::vector<int>>&,
 					     const bool);
 
+exhaustiveAnnotations determineAnnotationsEx(const std::vector<std::vector<double>>&,
+					     unsigned long,
+					     double,
+					     const std::vector<std::vector<int>>&,
+					     const bool,
+					     const std::vector<columnSummary>&,
+					     int&,
+					     double);
+
+
 std::vector<double> determineAnnotationBoundaries(const std::vector<gateInfo>&, unsigned long, bool);
 
 std::vector<std::vector<int>> annotateCluster(const std::vector<std::vector<double>>& ,
@@ -162,8 +201,8 @@ Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix&,
 			 double,
 			 bool,
 			 double,
-			 unsigned long long);
-		
+			 unsigned long long,
+			 double);
 
 std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>&,
 				    double,
@@ -184,8 +223,8 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>&,
 				    Rcpp::List,
 				    const double&,
 				    double,
-				    unsigned long long&);
-
+				    unsigned long long&,
+				    double);
 
 //cleaning up the recursion; now stack implemented
 
@@ -203,7 +242,8 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>&,
 				    const bool&,
 				    const bool&,
 				    unsigned long,
-				    unsigned long long&); 
+				    unsigned long long&);
+
  
 
 searchResults candidateClusterSearch(const std::vector<std::vector<double>>&,
@@ -220,6 +260,7 @@ searchResults candidateClusterSearch(const std::vector<std::vector<double>>&,
 				     unsigned long long,
 				     bool,
 				     int);
+
 
 
 #endif

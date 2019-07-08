@@ -21,7 +21,7 @@
 #include <thread>
 #include <mutex>
 #include <Rcpp.h>
-//#include <sys/resource.h>
+#include <sys/resource.h>
 
 double cppRnorm(double mu, double std, std::mt19937& mtRef)
 {
@@ -147,8 +147,6 @@ std::vector<double> addDistributionNoiseToDataVector(const std::vector<double>& 
   return resultVec;
 }
 
-// [[Rcpp::plugins(cpp11)]]
-// [[Rcpp::export]]
 std::vector<double> addNoiseToDataVector(const std::vector<double>& dataVector, double scaleGaussian,
 					 unsigned long long rSeed) {
   std::mt19937 mt(rSeed);

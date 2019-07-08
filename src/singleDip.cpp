@@ -58,8 +58,6 @@ std::vector<double> _dip1_col_names_ = {0.00000,0.01000,0.02000,0.05000,0.10000,
 					0.60000,0.70000,0.80000,0.90000,0.95000,0.98000,0.99000,0.99500,0.99800,
 					0.99900,0.99950,0.99980,0.99990,0.99995,0.99998,0.99999,1.00000};
 
-// [[Rcpp::plugins(cpp11)]]
-// [[Rcpp::export]]
 double singleDip(const std::vector<double>& x) {
   double dip = 0;
   double *p_dip = &dip;

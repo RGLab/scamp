@@ -162,9 +162,12 @@ std::vector<int> getViableColumns(const std::vector<std::vector<double>>& sorted
   return returnColumns;
 }
 
+
+
 std::vector<double> getCutPointsForViableColumn(int currentColumn,
 						const std::vector<std::vector<double>>& sdMat,
-						double singleDipThreshold) {
+						double singleDipThreshold)
+{
   int modeEst = 0;
   std::vector<double> sortedData = sdMat[currentColumn];
   double ddPval, tdPval;
@@ -189,7 +192,8 @@ std::vector<double> getCutPointsForViableColumn(int currentColumn,
       modeEst = 3;
     }
   }
-  std::vector<double> cutPoints = tsGates(sortedData,modeEst);
+  std::vector<double> cutPoints;
+  cutPoints = tsGates(sortedData,modeEst);
   return cutPoints;
 }
 
@@ -358,7 +362,7 @@ searchResults candidateClusterSearch(const std::vector<std::vector<double>>& dat
 				     long maxGateNum,
 				     bool randomCandSearch,
 				     bool restrictedCandSearch,
-				     bool fixedBoundarySearch,
+				     bool annotationForestSearch,
 				     unsigned long long rndSeed,
 				     bool parallelEx,
 				     int startingParexRoot)
@@ -482,7 +486,8 @@ searchResults candidateClusterSearch(const std::vector<std::vector<double>>& dat
 				  parallelEx,firstParexIter,startingParexRoot);
     //if no columns are viable, we have found a candidate cluster.
     if (viableCols.size() == 0) {
-      if (!fixedBoundarySearch) {
+      //if not constructing an annotation forest, record it.
+      if (!annotationForestSearch) {
 	candidateClusters.push_back(baseIndex);
 	//terminate search if we have found too many candidate cluseters
 	if (candidateClusters.size() > maxClusters) {
@@ -494,24 +499,46 @@ searchResults candidateClusterSearch(const std::vector<std::vector<double>>& dat
       //update the stack, respecting the users restriction flag.
       if (restrictedCandSearch) {
 	//note we pass the activeDataSubset
-	restrictedStackUpdate(viableCols,aCols,aRows,activeDataSubset,sortedAdmissibleSubset,baseIndex,
-			      gateDetails,searchStack,dipThreshold,maxGateNum,(currentDepth+1),
-			      lowRestrictionVec,highRestrictionVec,repeatedSplitting);
+	restrictedStackUpdate(viableCols,
+			      aCols,
+			      aRows,
+			      activeDataSubset,
+			      sortedAdmissibleSubset,
+			      baseIndex,
+			      gateDetails,
+			      searchStack,
+			      dipThreshold,
+			      maxGateNum,
+			      (currentDepth+1),
+			      lowRestrictionVec,
+			      highRestrictionVec,
+			      repeatedSplitting);
       }
       else {
 	//note we pass the admissibleDataSubset
-	updateStackWithViableCols(viableCols,aCols,aRows,admissibleDataSubset,sortedAdmissibleSubset,baseIndex,
-				  gateDetails,searchStack,dipThreshold,maxGateNum,(currentDepth+1),repeatedSplitting);
+	updateStackWithViableCols(viableCols,
+				  aCols,
+				  aRows,
+				  admissibleDataSubset,
+				  sortedAdmissibleSubset,
+				  baseIndex,
+				  gateDetails,
+				  searchStack,
+				  dipThreshold,
+				  maxGateNum,
+				  (currentDepth+1),
+				  repeatedSplitting);
       }
     }
-    if (fixedBoundarySearch) {
+    if (annotationForestSearch) {
+      //if we are constructing an annotation forest, termination occurs when the number of gates recorded exceeds maxClusters.
       if (gateDetails.size() > maxClusters) {
 	stillSearchingForCC = false;
       }
     }
   }
   bool vacuousSearch = false;
-  if ((candidateClusters.size() == 0) && (!fixedBoundarySearch)) {
+  if ((candidateClusters.size() == 0) && (!annotationForestSearch)) {
     // in the event no clusters are found, return the vacuous cluster (the indices of the data set)
     std::vector<long> vacuousCluster;
     for (long i = 0; i != rowNum; ++i)

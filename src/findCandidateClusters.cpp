@@ -8,7 +8,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-//#include <sys/resource.h>
+#include <sys/resource.h>
 #include <random>
 
 void ccSearchThread(const std::vector<std::vector<double>>& dmRef,
@@ -24,7 +24,7 @@ void ccSearchThread(const std::vector<std::vector<double>>& dmRef,
 		    const bool& searchRandom,
 		    const bool& searchRestricted,
 		    long& bsCounter,
-		    const bool& boundaryAssesment,
+		    const bool& annotationForest,
 		    const long& pathologyLimit,
 		    std::vector<bool>& sigilVector,
 		    const int indexSigil,//important to copy this index from main thread -- else iteration points past end of sigilVector
@@ -45,7 +45,7 @@ void ccSearchThread(const std::vector<std::vector<double>>& dmRef,
 						    maxNumGat,
 						    searchRandom,
 						    searchRestricted,
-						    boundaryAssesment,
+						    annotationForest,
 						    rSeed,
 						    searchParEx,
 						    parExStartRoot);
@@ -92,9 +92,10 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 				    const bool& fRandomSearch,
 				    const double& maxAllowedTime,
 				    const bool& printDebugInfo,
-				    const bool& boundaryAssesmentRun,
+				    const bool& annotationForestRun,
 				    unsigned long numThreadsTotal,
-				    unsigned long long& randomSeed) {
+				    unsigned long long& randomSeed)
+{
   searchResults fCandClusters;
   bool underMaxTime = true;
   bool noPathology = true;
@@ -106,7 +107,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
   const auto numInSubset = ((fDataVals[0]).size());
   const long pathologyLimit = (fClusterLB * 10); //only check for vacuous clusterings if the subset is large enough.
   searchResults parResult;
-  bool noFixBdryInterrupt = true;
+  bool noAnnForestInterrupt = true;
   //auto duration_s = std::chrono::duration<double>(dcast);
   if (printDebugInfo) {
     std::cout << "Max allowed time for search: " << maxAllowedTime << std::endl;
@@ -151,7 +152,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 				       std::ref(fRandomSearch),
 				       std::ref(fUseRestrictedValue),
 				       std::ref(badSearchCounter),
-				       std::ref(boundaryAssesmentRun),
+				       std::ref(annotationForestRun),
 				       std::ref(pathologyLimit),
 				       std::ref(sigVec),
 				       i,
@@ -166,7 +167,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
       }
     }
     //continue to spawn threads until we find enough candidate clusters.
-    while (launchedThreads && underMaxTime && noPathology && noFixBdryInterrupt) {
+    while (launchedThreads && underMaxTime && noPathology && noAnnForestInterrupt) {
       //each thread terminates by decrementing activeThreads.
       //by starting a loop iteration with a wait, and then setting launchedThreads to activeThreads
       //loop will exit once fMaxClusterNum activeThreads have completed running.
@@ -209,7 +210,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 				      std::ref(fRandomSearch),
 				      std::ref(fUseRestrictedValue),
 				      std::ref(badSearchCounter),
-				      std::ref(boundaryAssesmentRun),
+				      std::ref(annotationForestRun),
 				      std::ref(pathologyLimit),
 				      std::ref(sigVec),
 				      i,
@@ -238,7 +239,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 	elapsedTime = currentDuration.count();
 	if (printDebugInfo) {
 	  std::cout << "Elapsed search time: " << elapsedTime << std::endl;
-	  if (boundaryAssesmentRun) {
+	  if (annotationForestRun) {
 	    std::cout << "Gates found: " << fCandClusters.gateLocations.size() << std::endl;
 	  }
 	  else{
@@ -248,9 +249,9 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 	if (elapsedTime > maxAllowedTime) {
 	  underMaxTime = false;
 	}
-	if (boundaryAssesmentRun) {
+	if (annotationForestRun) {
 	  if (fCandClusters.gateLocations.size() > fMaxClusterNum) {
-	    noFixBdryInterrupt = false;
+	    noAnnForestInterrupt = false;
 	  }
 	}
       }
@@ -267,7 +268,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
       currentDuration = checkPoint-startSearch;
       elapsedTime = currentDuration.count();
       std::cout << "Final search time: " << elapsedTime << std::endl;
-      if (boundaryAssesmentRun) {
+      if (annotationForestRun) {
 	std::cout << "Total gates found: " << fCandClusters.gateLocations.size() << std::endl;
       }
       else{
@@ -304,10 +305,20 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
     if (allRootNum <= 1) {
       guardCandidateClusters.unlock();
       //in the case of no viable or a single viable root, pass to exhaustiveSearch.
-      fCandClusters =  candidateClusterSearch(fDataVals,fRestrictedVals,fDipT,fClusterLB,
-					      fRepeatsAllowed,fMaxSearchDepth,
-					      fMaxClusterNum,fMaxNumberOfGates,fRandomSearch,fUseRestrictedValue,
-					      boundaryAssesmentRun,(randomSeed+1),ccSearchParex,ccSearchParexRoot);
+      fCandClusters =  candidateClusterSearch(fDataVals,
+					      fRestrictedVals,
+					      fDipT,
+					      fClusterLB,
+					      fRepeatsAllowed,
+					      fMaxSearchDepth,
+					      fMaxClusterNum,
+					      fMaxNumberOfGates,
+					      fRandomSearch,
+					      fUseRestrictedValue,
+					      annotationForestRun,
+					      (randomSeed+1),
+					      ccSearchParex,
+					      ccSearchParexRoot);
     }
     else {
       ccSearchParex = true;
@@ -339,7 +350,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 					 std::ref(fRandomSearch),
 					 std::ref(fUseRestrictedValue),
 					 std::ref(badSearchCounter),
-					 std::ref(boundaryAssesmentRun),
+					 std::ref(annotationForestRun),
 					 std::ref(pathologyLimit),
 					 std::ref(sigVec),
 					 i,
@@ -378,7 +389,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
       }
       else {
 	//monitor thread pool, launching new threads along new roots as each search completes.
-	while (launchedThreads && underMaxTime && noPathology && noFixBdryInterrupt) {
+	while (launchedThreads && underMaxTime && noPathology && noAnnForestInterrupt) {
 	  //as in the previous case, each thread terminates by decrementing activeThreads.
 	  //here, by starting a loop iteration with a wait, and then setting launchedThreads to activeThreads
 	  //loop will exit once activeThreads have explored the remainder of vRootsIndex.
@@ -416,7 +427,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 					  std::ref(fRandomSearch),
 					  std::ref(fUseRestrictedValue),
 					  std::ref(badSearchCounter),
-					  std::ref(boundaryAssesmentRun),
+					  std::ref(annotationForestRun),
 					  std::ref(pathologyLimit),
 					  std::ref(sigVec),
 					  i,
@@ -425,6 +436,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 					  ccSearchParexRoot,
 					  std::ref(searchCompleteCV),
 					  std::ref(activeThreads));
+
 	      if (printDebugInfo) {
 		std::cout << "Launched a new thread in slot: " << i << std::endl;
 		std::cout << "Used seed: " << (randomSeed+1) << std::endl;
@@ -445,7 +457,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 	    elapsedTime = currentDuration.count();
 	    if (printDebugInfo) {
 	      std::cout << "Elapsed search time: " << elapsedTime << std::endl;
-	      if (boundaryAssesmentRun) {
+	      if (annotationForestRun) {
 		std::cout << "Gates found: " << fCandClusters.gateLocations.size() << std::endl;
 	      }
 	      else{
@@ -455,9 +467,9 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 	    if (elapsedTime > maxAllowedTime) {
 	      underMaxTime = false;
 	    }
-	    if (boundaryAssesmentRun) {
+	    if (annotationForestRun) {
 	      if (fCandClusters.gateLocations.size() > fMaxClusterNum) {
-		noFixBdryInterrupt = false;
+		noAnnForestInterrupt = false;
 	      }
 	    }
 	  }
@@ -475,7 +487,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 	currentDuration = checkPoint-startSearch;
 	elapsedTime = currentDuration.count();
 	std::cout << "Final search time: " << elapsedTime << std::endl;
-	if (boundaryAssesmentRun) {
+	if (annotationForestRun) {
 	  std::cout << "Total gates found: " << fCandClusters.gateLocations.size() << std::endl;
 	}
 	else{
@@ -491,7 +503,7 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
     }
   }
   else if (fRandomSearch) { 
-    while ((fCandClusters.candidates.size() < fMaxClusterNum) && underMaxTime && noPathology && noFixBdryInterrupt) {
+    while ((fCandClusters.candidates.size() < fMaxClusterNum) && underMaxTime && noPathology && noAnnForestInterrupt) {
       // if the user has set a random seed, progressively increment for next search.
       if (randomSeed > 0) {
 	currentSeed += 1;
@@ -500,10 +512,20 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
       else {
 	currentSeed = rdCCS();
       }
-      parResult = candidateClusterSearch(fDataVals,fRestrictedVals,fDipT,fClusterLB,
-					 fRepeatsAllowed,fMaxSearchDepth,
-					 fMaxClusterNum,fMaxNumberOfGates,fRandomSearch,fUseRestrictedValue,
-					 boundaryAssesmentRun,currentSeed,ccSearchParex,ccSearchParexRoot);
+      parResult = candidateClusterSearch(fDataVals,
+					 fRestrictedVals,
+					 fDipT,
+					 fClusterLB,
+					 fRepeatsAllowed,
+					 fMaxSearchDepth,
+					 fMaxClusterNum,
+					 fMaxNumberOfGates,
+					 fRandomSearch,
+					 fUseRestrictedValue,
+					 annotationForestRun,
+					 currentSeed,
+					 ccSearchParex,
+					 ccSearchParexRoot);
       //check for search pathology
       if ((parResult.abortIteration) && (numInSubset > pathologyLimit)) {
 	//this condition is only true if the search didn't find a candidate cluster.
@@ -546,26 +568,36 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
       if (printDebugInfo) {
 	std::cout << "Elapsed restricted search time: " << elapsedTime << std::endl;
 	std::cout << "Current seed: " << currentSeed << std::endl;
-	if (boundaryAssesmentRun) {
+	if (annotationForestRun) {
 	  std::cout << "Gates found: " << fCandClusters.gateLocations.size() << std::endl;
 	}
 	else{
 	  std::cout << "Candidate clusters found: " << fCandClusters.candidates.size() << std::endl;
 	}
       }
-      if (boundaryAssesmentRun) {
+      if (annotationForestRun) {
 	if (fCandClusters.gateLocations.size() > fMaxClusterNum) {
-	  noFixBdryInterrupt = false;
+	  noAnnForestInterrupt = false;
 	}
       }
     }
   }
   else {
     //pass in the random seed directly in this event -- it won't be used.
-    fCandClusters =  candidateClusterSearch(fDataVals,fRestrictedVals,fDipT,fClusterLB,
-					    fRepeatsAllowed,fMaxSearchDepth,
-					    fMaxClusterNum,fMaxNumberOfGates,fRandomSearch,fUseRestrictedValue,
-					    boundaryAssesmentRun,(randomSeed+1),ccSearchParex,ccSearchParexRoot);
+    fCandClusters =  candidateClusterSearch(fDataVals,
+					    fRestrictedVals,
+					    fDipT,
+					    fClusterLB,
+					    fRepeatsAllowed,
+					    fMaxSearchDepth,
+					    fMaxClusterNum,
+					    fMaxNumberOfGates,
+					    fRandomSearch,
+					    fUseRestrictedValue,
+					    annotationForestRun,
+					    (randomSeed+1),
+					    ccSearchParex,
+					    ccSearchParexRoot);
   }
   //whatever the search parameter, update the random seed with the current seed.
   if (randomSeed > 0) {

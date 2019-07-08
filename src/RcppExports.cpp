@@ -5,22 +5,9 @@
 
 using namespace Rcpp;
 
-// addNoiseToDataVector
-std::vector<double> addNoiseToDataVector(const std::vector<double>& dataVector, double scaleGaussian, unsigned long long rSeed);
-RcppExport SEXP _scamp_addNoiseToDataVector(SEXP dataVectorSEXP, SEXP scaleGaussianSEXP, SEXP rSeedSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<double>& >::type dataVector(dataVectorSEXP);
-    Rcpp::traits::input_parameter< double >::type scaleGaussian(scaleGaussianSEXP);
-    Rcpp::traits::input_parameter< unsigned long long >::type rSeed(rSeedSEXP);
-    rcpp_result_gen = Rcpp::wrap(addNoiseToDataVector(dataVector, scaleGaussian, rSeed));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cppNoisyScamp
-Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix, double dipT, int clusterLB, bool repeatsAllowed, int maxSearchDepth, long maxClusterNum, Rcpp::StringVector userAnnotations, long maxNumberOfGates, bool randomSearch, bool randomResidualSearch, const std::vector<double>& finalAnnotationQs, int numThreadsRequested, bool useRestrictedValue, Rcpp::NumericMatrix& restrictedValueMatrix, bool useFixedAnnotationBoundaries, Rcpp::List fixedAnnBdrys, int numberOfScampIterations, std::string outputDirectory, bool verboseOutput, double maxSearchTime, bool debugScampRun, double gaussianScale, unsigned long long randomSeed);
-RcppExport SEXP _scamp_cppNoisyScamp(SEXP rawDataMatrixSEXP, SEXP dipTSEXP, SEXP clusterLBSEXP, SEXP repeatsAllowedSEXP, SEXP maxSearchDepthSEXP, SEXP maxClusterNumSEXP, SEXP userAnnotationsSEXP, SEXP maxNumberOfGatesSEXP, SEXP randomSearchSEXP, SEXP randomResidualSearchSEXP, SEXP finalAnnotationQsSEXP, SEXP numThreadsRequestedSEXP, SEXP useRestrictedValueSEXP, SEXP restrictedValueMatrixSEXP, SEXP useFixedAnnotationBoundariesSEXP, SEXP fixedAnnBdrysSEXP, SEXP numberOfScampIterationsSEXP, SEXP outputDirectorySEXP, SEXP verboseOutputSEXP, SEXP maxSearchTimeSEXP, SEXP debugScampRunSEXP, SEXP gaussianScaleSEXP, SEXP randomSeedSEXP) {
+Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix, double dipT, int clusterLB, bool repeatsAllowed, int maxSearchDepth, long maxClusterNum, Rcpp::StringVector userAnnotations, long maxNumberOfGates, bool randomSearch, bool randomResidualSearch, const std::vector<double>& finalAnnotationQs, int numThreadsRequested, bool useRestrictedValue, Rcpp::NumericMatrix& restrictedValueMatrix, bool useForestValues, Rcpp::List forestValues, int numberOfScampIterations, std::string outputDirectory, bool verboseOutput, double maxSearchTime, bool debugScampRun, double gaussianScale, unsigned long long randomSeed, double depthScoreThreshold);
+RcppExport SEXP _scamp_cppNoisyScamp(SEXP rawDataMatrixSEXP, SEXP dipTSEXP, SEXP clusterLBSEXP, SEXP repeatsAllowedSEXP, SEXP maxSearchDepthSEXP, SEXP maxClusterNumSEXP, SEXP userAnnotationsSEXP, SEXP maxNumberOfGatesSEXP, SEXP randomSearchSEXP, SEXP randomResidualSearchSEXP, SEXP finalAnnotationQsSEXP, SEXP numThreadsRequestedSEXP, SEXP useRestrictedValueSEXP, SEXP restrictedValueMatrixSEXP, SEXP useForestValuesSEXP, SEXP forestValuesSEXP, SEXP numberOfScampIterationsSEXP, SEXP outputDirectorySEXP, SEXP verboseOutputSEXP, SEXP maxSearchTimeSEXP, SEXP debugScampRunSEXP, SEXP gaussianScaleSEXP, SEXP randomSeedSEXP, SEXP depthScoreThresholdSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -38,8 +25,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type numThreadsRequested(numThreadsRequestedSEXP);
     Rcpp::traits::input_parameter< bool >::type useRestrictedValue(useRestrictedValueSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix& >::type restrictedValueMatrix(restrictedValueMatrixSEXP);
-    Rcpp::traits::input_parameter< bool >::type useFixedAnnotationBoundaries(useFixedAnnotationBoundariesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type fixedAnnBdrys(fixedAnnBdrysSEXP);
+    Rcpp::traits::input_parameter< bool >::type useForestValues(useForestValuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type forestValues(forestValuesSEXP);
     Rcpp::traits::input_parameter< int >::type numberOfScampIterations(numberOfScampIterationsSEXP);
     Rcpp::traits::input_parameter< std::string >::type outputDirectory(outputDirectorySEXP);
     Rcpp::traits::input_parameter< bool >::type verboseOutput(verboseOutputSEXP);
@@ -47,63 +34,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type debugScampRun(debugScampRunSEXP);
     Rcpp::traits::input_parameter< double >::type gaussianScale(gaussianScaleSEXP);
     Rcpp::traits::input_parameter< unsigned long long >::type randomSeed(randomSeedSEXP);
-    rcpp_result_gen = Rcpp::wrap(cppNoisyScamp(rawDataMatrix, dipT, clusterLB, repeatsAllowed, maxSearchDepth, maxClusterNum, userAnnotations, maxNumberOfGates, randomSearch, randomResidualSearch, finalAnnotationQs, numThreadsRequested, useRestrictedValue, restrictedValueMatrix, useFixedAnnotationBoundaries, fixedAnnBdrys, numberOfScampIterations, outputDirectory, verboseOutput, maxSearchTime, debugScampRun, gaussianScale, randomSeed));
-    return rcpp_result_gen;
-END_RCPP
-}
-// doubleDip
-double doubleDip(const std::vector<double>& x);
-RcppExport SEXP _scamp_doubleDip(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<double>& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(doubleDip(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// singleDip
-double singleDip(const std::vector<double>& x);
-RcppExport SEXP _scamp_singleDip(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<double>& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(singleDip(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// tripleDip
-double tripleDip(const std::vector<double>& x);
-RcppExport SEXP _scamp_tripleDip(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<double>& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(tripleDip(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// tsGates
-std::vector<double> tsGates(const std::vector<double>& xVec, int modePrior);
-RcppExport SEXP _scamp_tsGates(SEXP xVecSEXP, SEXP modePriorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<double>& >::type xVec(xVecSEXP);
-    Rcpp::traits::input_parameter< int >::type modePrior(modePriorSEXP);
-    rcpp_result_gen = Rcpp::wrap(tsGates(xVec, modePrior));
+    Rcpp::traits::input_parameter< double >::type depthScoreThreshold(depthScoreThresholdSEXP);
+    rcpp_result_gen = Rcpp::wrap(cppNoisyScamp(rawDataMatrix, dipT, clusterLB, repeatsAllowed, maxSearchDepth, maxClusterNum, userAnnotations, maxNumberOfGates, randomSearch, randomResidualSearch, finalAnnotationQs, numThreadsRequested, useRestrictedValue, restrictedValueMatrix, useForestValues, forestValues, numberOfScampIterations, outputDirectory, verboseOutput, maxSearchTime, debugScampRun, gaussianScale, randomSeed, depthScoreThreshold));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_scamp_addNoiseToDataVector", (DL_FUNC) &_scamp_addNoiseToDataVector, 3},
-    {"_scamp_cppNoisyScamp", (DL_FUNC) &_scamp_cppNoisyScamp, 23},
-    {"_scamp_doubleDip", (DL_FUNC) &_scamp_doubleDip, 1},
-    {"_scamp_singleDip", (DL_FUNC) &_scamp_singleDip, 1},
-    {"_scamp_tripleDip", (DL_FUNC) &_scamp_tripleDip, 1},
-    {"_scamp_tsGates", (DL_FUNC) &_scamp_tsGates, 2},
+    {"_scamp_cppNoisyScamp", (DL_FUNC) &_scamp_cppNoisyScamp, 24},
     {NULL, NULL, 0}
 };
 

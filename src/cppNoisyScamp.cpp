@@ -23,6 +23,7 @@
 #include <Rcpp.h>
 #include <map>
 #include "scmp.h"
+#include <sys/resource.h>
 #include <fstream>
 #include <cstdio> //for std::rename
 #include <thread>
@@ -175,10 +176,10 @@ std::vector<std::string> assignLabelToScoreVector(const std::vector<std::vector<
 	setScore = tempIntVector[j];
 	setSize = (tempIntVector[(j+1)]-1);
 	if ((setSize <= 7) && (setScore <= (setSize+1))){
-	  annotationString += clusterAnnotations[tempColNum] + "_" + ((finalLabels[setSize])[setScore]) + "_";
+	  annotationString += clusterAnnotations[tempColNum] + "~" + ((finalLabels[setSize])[setScore]) + "~";
 	}
 	else {
-	  annotationString += clusterAnnotations[tempColNum] + "_AnnotationError_"; 
+	  annotationString += clusterAnnotations[tempColNum] + "~AnnotationError~"; 
 	}
       }
     }
@@ -191,7 +192,45 @@ std::vector<std::string> assignLabelToScoreVector(const std::vector<std::vector<
   }
   return labelVector;
 }
-    
+
+
+std::vector<std::string> assignNumLabelToScoreVector(const std::vector<std::vector<int>>& scoredClustering,
+						     const std::vector<std::string>& clusterAnnotations){
+  std::string annotationString = "";
+  std::vector<int> tempIntVector;
+  int tempColNum, setSize, setScore;
+  auto numObservations = scoredClustering.size();
+  std::vector<std::string> labelVector(numObservations,annotationString);
+  for (auto i=0; i != numObservations; ++i) {
+    annotationString = "";
+    tempIntVector = scoredClustering[i];
+    for (auto j=0; j != tempIntVector.size(); j+=2) {
+      tempColNum = j/2;
+      if ((tempIntVector[j]==0) && (tempIntVector[(j+1)]==0)) {
+	continue;
+      }
+      else {
+	setScore = (tempIntVector[j]+1);
+	setSize = (tempIntVector[(j+1)]+1);
+	if (setScore <= setSize) {
+	  annotationString += (clusterAnnotations[tempColNum] + "~" + std::to_string(setScore) + "~" + std::to_string(setSize) + "~");
+	}
+	else {
+	  annotationString += clusterAnnotations[tempColNum] + "~AnnotationError~"; 
+	}
+      }
+    }
+    if (annotationString != "")  {
+      labelVector[i]=annotationString;
+    }
+    else {
+      labelVector[i]="Uncertain";
+    }
+  }
+  return labelVector;
+}
+
+
 
 
 // [[Rcpp::plugins(cpp11)]]
@@ -210,15 +249,16 @@ Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix,
 			 int numThreadsRequested,
 			 bool useRestrictedValue,
 			 Rcpp::NumericMatrix& restrictedValueMatrix,
-			 bool useFixedAnnotationBoundaries,
-			 Rcpp::List fixedAnnBdrys,
+			 bool useForestValues,
+			 Rcpp::List forestValues,
 			 int numberOfScampIterations,
 			 std::string outputDirectory,
 			 bool verboseOutput,
 			 double maxSearchTime,
 			 bool debugScampRun,
 			 double gaussianScale,
-			 unsigned long long randomSeed)
+			 unsigned long long randomSeed,
+			 double depthScoreThreshold)
 {
   //Determine number of threads to use.
   unsigned long numThreadsToUse;
@@ -355,9 +395,10 @@ Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix,
 			maxClusterNum,debugScampRun,clusterAnnotations,
 			maxNumberOfGates,randomSearch,randomResidualSearch,
 			finalAnnotationQs,numThreadsToUse,
-			useRestrictedValue,restrictedVals,useFixedAnnotationBoundaries,
-			fixedAnnBdrys,maxSearchTime,gaussianScale,currentRandomSeed);
-
+			useRestrictedValue,restrictedVals,useForestValues,
+			forestValues,maxSearchTime,gaussianScale,currentRandomSeed,
+			depthScoreThreshold);
+    
     //check if scamp iteration was terminated early
     //if so, continue to next loop iteration
     tempIntVec = scampResult[0];
@@ -468,10 +509,15 @@ Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix,
       }
     }
 
-    //transform the final scamp result into a vector of strings, and write to file.
-    voteScampResult = assignLabelToScoreVector(finalScampResult,clusterAnnotations,finalLabels);
-    mlabScampResult = assignLabelToScoreVector(maxScampResult,clusterAnnotations,finalLabels);
-    
+    if (useForestValues) {
+      voteScampResult = assignNumLabelToScoreVector(finalScampResult,clusterAnnotations);
+      mlabScampResult = assignNumLabelToScoreVector(maxScampResult,clusterAnnotations);
+    }
+    else {
+      //transform the final scamp result into a vector of strings, and write to file.
+      voteScampResult = assignLabelToScoreVector(finalScampResult,clusterAnnotations,finalLabels);
+      mlabScampResult = assignLabelToScoreVector(maxScampResult,clusterAnnotations,finalLabels);
+    }    
     //write the labeled scamp results to file
     if (verboseOutput && ((elapsedIter % 50)==0)) { 
       for (auto i=0; i != numberOfDataObs; ++i) {
