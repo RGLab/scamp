@@ -5,6 +5,8 @@
 
 The `scamp` package implements the SCAMP algorithm described in [Selective Clustering Annotated using Modes of Projections](https://arxiv.org/abs/1807.10328).
 
+The `arxiv` branch is used to reproduce results reported in v01 of the arxiv manuscript.
+
 ## Installation
 
 Currently `scamp` must be installed from its source.
