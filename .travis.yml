@@ -3,6 +3,7 @@ language: r
 r: release
 sudo: false
 os: osx
+warnings_are_errors: false
 compiler:
   - clang
   - gcc
