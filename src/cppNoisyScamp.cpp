@@ -257,7 +257,10 @@ Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix,
 			 bool debugScampRun,
 			 double gaussianScale,
 			 unsigned long long randomSeed,
-			 double depthScoreThreshold)
+			 double depthScoreThreshold,
+			 unsigned long subSampleThreshold,
+			 unsigned long subSampleSize,
+			 unsigned long subSampleIterations)
 {
   //Determine number of threads to use.
   unsigned long numThreadsToUse;
@@ -396,7 +399,10 @@ Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix,
 			finalAnnotationQs,numThreadsToUse,
 			useRestrictedValue,restrictedVals,useForestValues,
 			forestValues,maxSearchTime,gaussianScale,currentRandomSeed,
-			depthScoreThreshold);
+			depthScoreThreshold,
+			subSampleThreshold,
+			subSampleSize,
+			subSampleIterations);
     
     //check if scamp iteration was terminated early
     //if so, continue to next loop iteration

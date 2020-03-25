@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // cppNoisyScamp
-Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix, double dipT, int clusterLB, bool repeatsAllowed, int maxSearchDepth, long maxClusterNum, Rcpp::StringVector userAnnotations, long maxNumberOfGates, bool randomSearch, bool randomResidualSearch, const std::vector<double>& finalAnnotationQs, int numThreadsRequested, bool useRestrictedValue, Rcpp::NumericMatrix& restrictedValueMatrix, bool useForestValues, Rcpp::List forestValues, int numberOfScampIterations, std::string outputDirectory, bool verboseOutput, double maxSearchTime, bool debugScampRun, double gaussianScale, unsigned long long randomSeed, double depthScoreThreshold);
-RcppExport SEXP _scamp_cppNoisyScamp(SEXP rawDataMatrixSEXP, SEXP dipTSEXP, SEXP clusterLBSEXP, SEXP repeatsAllowedSEXP, SEXP maxSearchDepthSEXP, SEXP maxClusterNumSEXP, SEXP userAnnotationsSEXP, SEXP maxNumberOfGatesSEXP, SEXP randomSearchSEXP, SEXP randomResidualSearchSEXP, SEXP finalAnnotationQsSEXP, SEXP numThreadsRequestedSEXP, SEXP useRestrictedValueSEXP, SEXP restrictedValueMatrixSEXP, SEXP useForestValuesSEXP, SEXP forestValuesSEXP, SEXP numberOfScampIterationsSEXP, SEXP outputDirectorySEXP, SEXP verboseOutputSEXP, SEXP maxSearchTimeSEXP, SEXP debugScampRunSEXP, SEXP gaussianScaleSEXP, SEXP randomSeedSEXP, SEXP depthScoreThresholdSEXP) {
+Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix& rawDataMatrix, double dipT, int clusterLB, bool repeatsAllowed, int maxSearchDepth, long maxClusterNum, Rcpp::StringVector userAnnotations, long maxNumberOfGates, bool randomSearch, bool randomResidualSearch, const std::vector<double>& finalAnnotationQs, int numThreadsRequested, bool useRestrictedValue, Rcpp::NumericMatrix& restrictedValueMatrix, bool useForestValues, Rcpp::List forestValues, int numberOfScampIterations, std::string outputDirectory, bool verboseOutput, double maxSearchTime, bool debugScampRun, double gaussianScale, unsigned long long randomSeed, double depthScoreThreshold, unsigned long subSampleThreshold, unsigned long subSampleSize, unsigned long subSampleIterations);
+RcppExport SEXP _scamp_cppNoisyScamp(SEXP rawDataMatrixSEXP, SEXP dipTSEXP, SEXP clusterLBSEXP, SEXP repeatsAllowedSEXP, SEXP maxSearchDepthSEXP, SEXP maxClusterNumSEXP, SEXP userAnnotationsSEXP, SEXP maxNumberOfGatesSEXP, SEXP randomSearchSEXP, SEXP randomResidualSearchSEXP, SEXP finalAnnotationQsSEXP, SEXP numThreadsRequestedSEXP, SEXP useRestrictedValueSEXP, SEXP restrictedValueMatrixSEXP, SEXP useForestValuesSEXP, SEXP forestValuesSEXP, SEXP numberOfScampIterationsSEXP, SEXP outputDirectorySEXP, SEXP verboseOutputSEXP, SEXP maxSearchTimeSEXP, SEXP debugScampRunSEXP, SEXP gaussianScaleSEXP, SEXP randomSeedSEXP, SEXP depthScoreThresholdSEXP, SEXP subSampleThresholdSEXP, SEXP subSampleSizeSEXP, SEXP subSampleIterationsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -35,13 +35,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type gaussianScale(gaussianScaleSEXP);
     Rcpp::traits::input_parameter< unsigned long long >::type randomSeed(randomSeedSEXP);
     Rcpp::traits::input_parameter< double >::type depthScoreThreshold(depthScoreThresholdSEXP);
-    rcpp_result_gen = Rcpp::wrap(cppNoisyScamp(rawDataMatrix, dipT, clusterLB, repeatsAllowed, maxSearchDepth, maxClusterNum, userAnnotations, maxNumberOfGates, randomSearch, randomResidualSearch, finalAnnotationQs, numThreadsRequested, useRestrictedValue, restrictedValueMatrix, useForestValues, forestValues, numberOfScampIterations, outputDirectory, verboseOutput, maxSearchTime, debugScampRun, gaussianScale, randomSeed, depthScoreThreshold));
+    Rcpp::traits::input_parameter< unsigned long >::type subSampleThreshold(subSampleThresholdSEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type subSampleSize(subSampleSizeSEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type subSampleIterations(subSampleIterationsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cppNoisyScamp(rawDataMatrix, dipT, clusterLB, repeatsAllowed, maxSearchDepth, maxClusterNum, userAnnotations, maxNumberOfGates, randomSearch, randomResidualSearch, finalAnnotationQs, numThreadsRequested, useRestrictedValue, restrictedValueMatrix, useForestValues, forestValues, numberOfScampIterations, outputDirectory, verboseOutput, maxSearchTime, debugScampRun, gaussianScale, randomSeed, depthScoreThreshold, subSampleThreshold, subSampleSize, subSampleIterations));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_scamp_cppNoisyScamp", (DL_FUNC) &_scamp_cppNoisyScamp, 24},
+    {"_scamp_cppNoisyScamp", (DL_FUNC) &_scamp_cppNoisyScamp, 27},
     {NULL, NULL, 0}
 };
 

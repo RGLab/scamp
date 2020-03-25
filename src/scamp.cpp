@@ -52,7 +52,10 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
 				    const double& maxAllowedTime,
 				    double gaussianScaleParam,
 				    unsigned long long& randomSeed,
-				    double depthScoreThreshold)
+				    double depthScoreThreshold,
+				    unsigned long subSampleThreshold,
+				    unsigned long subSampleSize,
+				    unsigned long subSampleIterations)
 {
   auto colNum = dataValsIn.size();
 
@@ -85,7 +88,10 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
 						     debugScamp,
 						     false,
 						     numThreadsToUse,
-						     randomSeed);
+						     randomSeed,
+						     subSampleThreshold,
+						     subSampleSize,
+						     subSampleIterations);
 
 
   if (_VERBOSE_NOISY_SCAMP_COMPILATION_ || debugScamp) {
@@ -211,7 +217,8 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>& data
       residClusters = findCandidateClusters(dataValSubset,restrictedValSubset,dipT,clusterLB,
 					    repeatsAllowed,maxSearchDepth,maxClusterNum,maxNumberOfGates,
 					    useRestrictedValue,randomSearch,maxAllowedTime,debugScamp,false,
-					    numThreadsToUse,randomSeed);
+					    numThreadsToUse,randomSeed,
+					    subSampleThreshold,subSampleSize,subSampleIterations);
       if (residClusters.abortIteration) {
 	std::cout << "Residual search abort." << std::endl;
 	std::vector<int> failVec = {-1,-1};

@@ -133,6 +133,22 @@
 #'
 #' @param annotationThresholdScore When a column vector's depth score exceeds this threshold,
 #' SCAMP will use that column vector to annotate a cluster.
+#' 
+#' @param subSampleThreshold Integer value. 
+#' Sets the number of cells needed in a clustering collection to sub-sample for density estimation.
+#' NOTE: sub-sampling only occurs for density estimation. The dip test is computed on all cells
+#' in the clustering collection. 
+#' 
+#' @param subSampleSize Integer value.
+#' The number of cells to sub-sample from a clustering collection for density estimation.
+#' NOTE: sub-sampling only occurs for density estimation. The dip test is computed on all cells
+#' in the clustering collection. 
+#' 
+#' @param subSampleIterations Integer value.
+#' The number of distinct sub-sampled density estimates to compute. The final gate location is the median
+#' across the sub-sampled densities.
+#' NOTE: sub-sampling only occurs for density estimation. The dip test is computed on all cells
+#' in the clustering collection. 
 #'
 #' @return scamp returns an R list with two entries. Each entry is a vector of strings.
 #'  The first entry, named RunOffVote, is a clustering of the dataSet according to a run off vote across the scamp iterations.
@@ -171,7 +187,10 @@ scamp <- function(dataSet,
                   gaussianScaleParameter=4,
                   randomSeed=0,
                   allowRepeatedSplitting=FALSE,
-                  annotationThresholdScore=0.75){
+                  annotationThresholdScore=0.75,
+                  subSampleThreshold=1e6,
+                  subSampleSize=1e6,
+                  subSampleIterations=1){
     if (!is.matrix(dataSet))
         stop("Must provide a numeric R matrix")
     if (!is.double(pValueThreshold))
@@ -351,7 +370,10 @@ scamp <- function(dataSet,
                                  getDebugInfo,
                                  gaussianScaleParameter,
                                  randomSeed,
-                                 annotationThresholdScore)
+                                 annotationThresholdScore,
+                                 subSampleThreshold,
+                                 subSampleSize,
+                                 subSampleIterations)
     return(scampLabels)
 }
 

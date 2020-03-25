@@ -202,7 +202,11 @@ Rcpp::List cppNoisyScamp(Rcpp::NumericMatrix&,
 			 bool,
 			 double,
 			 unsigned long long,
-			 double);
+			 double,
+			 unsigned long,
+			 unsigned long,
+			 unsigned long);
+
 
 std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>&,
 				    double,
@@ -224,7 +228,10 @@ std::vector<std::vector<int>> scamp(const std::vector<std::vector<double>>&,
 				    const double&,
 				    double,
 				    unsigned long long&,
-				    double);
+				    double,
+				    unsigned long,
+				    unsigned long,
+				    unsigned long);
 
 //cleaning up the recursion; now stack implemented
 
@@ -242,9 +249,11 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>&,
 				    const bool&,
 				    const bool&,
 				    unsigned long,
-				    unsigned long long&);
+				    unsigned long long&,
+				    unsigned long,
+				    unsigned long,
+				    unsigned long);
 
- 
 
 searchResults candidateClusterSearch(const std::vector<std::vector<double>>&,
 				     const std::vector<std::vector<int>>&,
@@ -259,7 +268,11 @@ searchResults candidateClusterSearch(const std::vector<std::vector<double>>&,
 				     bool,
 				     unsigned long long,
 				     bool,
-				     int);
+				     int,
+				     unsigned long,
+				     unsigned long,
+				     unsigned long);
+
 
 
 

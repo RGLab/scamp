@@ -31,7 +31,10 @@ void ccSearchThread(const std::vector<std::vector<double>>& dmRef,
 		    const bool& searchParEx,
 		    int parExStartRoot,//also need to copy in, otherwise roots repeat.
 		    std::condition_variable& condRef,
-		    int& threadCounter)
+		    int& threadCounter,
+		    unsigned long subSampleThreshold,
+		    unsigned long subSampleSize,
+		    unsigned long subSampleIterations)
 {
   //randomly sample from the space of clustering trees, subject to the restrictions in rvRef
   searchResults parResult =  candidateClusterSearch(dmRef,
@@ -47,7 +50,10 @@ void ccSearchThread(const std::vector<std::vector<double>>& dmRef,
 						    annotationForest,
 						    rSeed,
 						    searchParEx,
-						    parExStartRoot);
+						    parExStartRoot,
+						    subSampleThreshold,
+						    subSampleSize,
+						    subSampleIterations);
   
   //having completed a random candidate cluster search, lock for updating
   std::lock_guard<std::mutex> guard(mutRef); 
@@ -93,7 +99,10 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 				    const bool& printDebugInfo,
 				    const bool& annotationForestRun,
 				    unsigned long numThreadsTotal,
-				    unsigned long long& randomSeed)
+				    unsigned long long& randomSeed,
+				    unsigned long subSampleThreshold,
+				    unsigned long subSampleSize,
+				    unsigned long subSampleIterations)
 {
   searchResults fCandClusters;
   bool underMaxTime = true;
@@ -159,7 +168,10 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 				       std::ref(ccSearchParex),
 				       ccSearchParexRoot,
 				       std::ref(searchCompleteCV),
-				       std::ref(activeThreads)));
+				       std::ref(activeThreads),
+				       subSampleThreshold,
+				       subSampleSize,
+				       subSampleIterations));
       if (printDebugInfo) {
 	std::cout << "launched thread " << i << std::endl;
 	std::cout << "Used seed " << currentSeed << std::endl;
@@ -217,7 +229,10 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 				      std::ref(ccSearchParex),
 				      ccSearchParexRoot,
 				      std::ref(searchCompleteCV),
-				      std::ref(activeThreads));
+				      std::ref(activeThreads),
+				      subSampleThreshold,
+				      subSampleSize,
+				      subSampleIterations);
 	  if (printDebugInfo) {
 	    std::cout << "Launched a new thread in slot: " << i << std::endl;
 	    std::cout << "Used seed: " << currentSeed << std::endl;
@@ -317,7 +332,10 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 					      annotationForestRun,
 					      (randomSeed+1),
 					      ccSearchParex,
-					      ccSearchParexRoot);
+					      ccSearchParexRoot,
+					      subSampleThreshold,
+					      subSampleSize,
+					      subSampleIterations);
     }
     else {
       ccSearchParex = true;
@@ -357,7 +375,10 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 					 std::ref(ccSearchParex),
 					 ccSearchParexRoot,
 					 std::ref(searchCompleteCV),
-					 std::ref(activeThreads)));
+					 std::ref(activeThreads),
+					 subSampleThreshold,
+					 subSampleSize,
+					 subSampleIterations));
 	if (printDebugInfo) {
 	  std::cout << "launched thread " << i << std::endl;
 	  std::cout << "Used seed " << (randomSeed+1) << std::endl;
@@ -434,8 +455,10 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 					  std::ref(ccSearchParex),
 					  ccSearchParexRoot,
 					  std::ref(searchCompleteCV),
-					  std::ref(activeThreads));
-
+					  std::ref(activeThreads),
+					  subSampleThreshold,
+					  subSampleSize,
+					  subSampleIterations);
 	      if (printDebugInfo) {
 		std::cout << "Launched a new thread in slot: " << i << std::endl;
 		std::cout << "Used seed: " << (randomSeed+1) << std::endl;
@@ -524,7 +547,10 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 					 annotationForestRun,
 					 currentSeed,
 					 ccSearchParex,
-					 ccSearchParexRoot);
+					 ccSearchParexRoot,
+					 subSampleThreshold,
+					 subSampleSize,
+					 subSampleIterations);
       //check for search pathology
       if ((parResult.abortIteration) && (numInSubset > pathologyLimit)) {
 	//this condition is only true if the search didn't find a candidate cluster.
@@ -596,7 +622,10 @@ searchResults findCandidateClusters(const std::vector<std::vector<double>>& fDat
 					    annotationForestRun,
 					    (randomSeed+1),
 					    ccSearchParex,
-					    ccSearchParexRoot);
+					    ccSearchParexRoot,
+					    subSampleThreshold,
+					    subSampleSize,
+					    subSampleIterations);
   }
   //whatever the search parameter, update the random seed with the current seed.
   if (randomSeed > 0) {
