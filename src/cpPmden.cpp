@@ -221,7 +221,8 @@ stringInfo cpPmden(const std::vector<double>& xIn) {
 	  eps[i] = cur_kuiper_val;
       }
     }
-    else{
+    //only locally smooth for small amounts of data.
+    else if (nsamp < 10000) {
       first_kuiper_ind = -1;//reset the flag for next iteration
       irmax = std::floor(std::log(nsamp)) + 3;
       icomax = 1;
@@ -264,6 +265,9 @@ stringInfo cpPmden(const std::vector<double>& xIn) {
 	  eps[cur_kni_lookup] = tmp_eps;
 	}
       }
+    }
+    else {
+      stillRepeating = false;
     }
   }
   return fts;
