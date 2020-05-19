@@ -1,6 +1,6 @@
 Package: scamp
 Title: Selective Clustering Annotated using Modes of Projections
-Version: 0.3.2
+Version: 0.5.0
 Authors@R: person("Evan", "Greene", email = "egreene@fredhutch.org", role = c("aut", "cre"))
 Description: This package implements selective clustering annotated using modes of projections (SCAMP).
     This package builds of the work of many others. Its source contains modified files from the following R packages:
